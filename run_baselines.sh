@@ -2,7 +2,7 @@
 
 # Experiment settings
 MODEL="VGG16"
-GR=30
+GR=100
 LR=0.01
 LBS=10
 LS=1
