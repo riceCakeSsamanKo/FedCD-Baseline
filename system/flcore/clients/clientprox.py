@@ -27,7 +27,8 @@ class clientProx(Client):
         trainloader = self.load_train_data()
         start_time = time.time()
 
-        # self.model.to(self.device)
+        self.model.to(self.device)
+        self.global_params = [p.to(self.device) for p in self.global_params]
         self.model.train()
 
         max_local_epochs = self.local_epochs
@@ -49,7 +50,8 @@ class clientProx(Client):
                 loss.backward()
                 self.optimizer.step(self.global_params, self.device)
 
-        # self.model.cpu()
+        self.model.cpu()
+        self.global_params = [p.cpu() for p in self.global_params]
 
         if self.learning_rate_decay:
             self.learning_rate_scheduler.step()
@@ -66,7 +68,8 @@ class clientProx(Client):
     def train_metrics(self):
         trainloader = self.load_train_data()
         # self.model = self.load_model('model')
-        # self.model.to(self.device)
+        self.model.to(self.device)
+        self.global_params = [p.to(self.device) for p in self.global_params]
         self.model.eval()
 
         train_num = 0
@@ -88,7 +91,8 @@ class clientProx(Client):
                 train_num += y.shape[0]
                 losses += loss.item() * y.shape[0]
 
-        # self.model.cpu()
+        self.model.cpu()
+        self.global_params = [p.cpu() for p in self.global_params]
         # self.save_model(self.model, 'model')
 
         return losses, train_num

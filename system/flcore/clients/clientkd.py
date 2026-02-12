@@ -21,7 +21,7 @@ class clientKD(Client):
         )
 
         self.feature_dim = list(args.model.head.parameters())[0].shape[1]
-        self.W_h = nn.Linear(self.feature_dim, self.feature_dim, bias=False).to(self.device)
+        self.W_h = nn.Linear(self.feature_dim, self.feature_dim, bias=False) # .to(self.device)
         self.optimizer_W = torch.optim.SGD(self.W_h.parameters(), lr=self.learning_rate)
         self.learning_rate_scheduler_W = torch.optim.lr_scheduler.ExponentialLR(
             optimizer=self.optimizer_W, 
@@ -37,7 +37,9 @@ class clientKD(Client):
 
     def train(self):
         trainloader = self.load_train_data()
-        # self.model.to(self.device)
+        self.model.to(self.device)
+        self.global_model.to(self.device)
+        self.W_h.to(self.device)
         self.model.train()
         self.global_model.train()
 
@@ -84,7 +86,9 @@ class clientKD(Client):
                 self.optimizer_g.step()
                 self.optimizer_W.step()
 
-        # self.model.cpu()
+        self.model.cpu()
+        self.global_model.cpu()
+        self.W_h.cpu()
 
         self.decomposition()
 
@@ -112,7 +116,9 @@ class clientKD(Client):
     def train_metrics(self):
         trainloader = self.load_train_data()
         # self.model = self.load_model('model')
-        # self.model.to(self.device)
+        self.model.to(self.device)
+        self.global_model.to(self.device)
+        self.W_h.to(self.device)
         self.model.eval()
         self.global_model.eval()
 
@@ -139,7 +145,9 @@ class clientKD(Client):
                 train_num += y.shape[0]
                 losses += loss.item() * y.shape[0]
 
-        # self.model.cpu()
+        self.model.cpu()
+        self.global_model.cpu()
+        self.W_h.cpu()
         # self.save_model(self.model, 'model')
 
         return losses, train_num

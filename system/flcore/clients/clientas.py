@@ -18,9 +18,9 @@ class clientAS(Client):
         self.fim_trace_history = []
 
     def train(self, is_selected):
+        self.model.to(self.device)
         if is_selected:
             trainloader = self.load_train_data()
-            # self.model.to(self.device)
             self.model.train()
 
         
@@ -44,8 +44,6 @@ class clientAS(Client):
                     self.optimizer.zero_grad()
                     loss.backward()
                     self.optimizer.step()
-
-            # self.model.cpu()
 
             if self.learning_rate_decay:
                 self.learning_rate_scheduler.step()
@@ -77,14 +75,8 @@ class clientAS(Client):
             # add the fisher log
             self.fim_trace_history.append(fim_trace_sum.item())
 
-            # Evaluate on the client's test dataset
-            # test_acc = self.evaluate()
-            # print(f"Client {self.id}, Test Accuracy: {test_acc:.1f}, FIM-T value: {fim_trace_sum.item():.1f}")
-            # print(f"Selected: {is_selected}, FIM-T value change: {(self.fim_trace_history[-1] - (self.fim_trace_history[-2] if len(self.fim_trace_history) > 1 else 0)):.1f}")
-
         else:
             trainloader = self.load_train_data()
-            # self.model.to(self.device)
             self.model.eval()
             # Compute FIM and its trace after training
             fim_trace_sum = 0
@@ -106,13 +98,11 @@ class clientAS(Client):
             # add the fisher log
             self.fim_trace_history.append(fim_trace_sum.item())
 
-            # Evaluate on the client's test dataset
-            # test_acc = self.evaluate()
-            # print(f"Client {self.id}, Test Accuracy: {test_acc:.1f}, FIM-T value: {fim_trace_sum.item():.1f}")
-            # print(f"FIM-T value change: {(self.fim_trace_history[-1] - (self.fim_trace_history[-2] if len(self.fim_trace_history) > 1 else 0)):.1f}")
+        self.model.cpu()
 
     def evaluate(self):
         testloader = self.load_test_data()
+        self.model.to(self.device)
         self.model.eval()
         correct = 0
         total = 0
@@ -125,6 +115,7 @@ class clientAS(Client):
                 total += y.size(0)
                 correct += predicted.eq(y).sum().item()
         accuracy = 100. * correct / total
+        self.model.cpu()
         return accuracy
     
     # def set_parameters(self, model, progress):
@@ -138,6 +129,9 @@ class clientAS(Client):
         local_prototypes = [[] for _ in range(self.num_classes)]
         batch_size = 16  # or any other suitable value
         trainloader = self.load_train_data(batch_size=batch_size)
+
+        self.model.to(self.device)
+        model.to(self.device)
 
         # print(f'client{id}')
         for x_batch, y_batch in trainloader:
@@ -190,6 +184,9 @@ class clientAS(Client):
         # Substitute the parameters of the base, enabling personalization
         for new_param, old_param in zip(model.base.parameters(), self.model.base.parameters()):
             old_param.data = new_param.data.clone()
+
+        self.model.cpu()
+        model.cpu()
 
 
         # end

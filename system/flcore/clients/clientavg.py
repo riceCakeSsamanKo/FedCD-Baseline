@@ -12,7 +12,7 @@ class clientAVG(Client):
 
     def train(self):
         trainloader = self.load_train_data()
-        # self.model.to(self.device)
+        self.model.to(self.device)
         self.model.train()
         
         start_time = time.time()
@@ -36,7 +36,7 @@ class clientAVG(Client):
                 loss.backward()
                 self.optimizer.step()
 
-        # self.model.cpu()
+        self.model.cpu()
 
         if self.learning_rate_decay:
             self.learning_rate_scheduler.step()
